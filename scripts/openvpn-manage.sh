@@ -52,7 +52,7 @@ EOF
 
 # Build curl options for OPNsense API calls
 curl_opts() {
-  local opts=(-s -w "\n%{http_code}")
+  local opts=(-s -w $'\n%{http_code}')
   if [[ "$OPNSENSE_INSECURE" = true ]]; then
     opts+=(-k)
   fi

@@ -59,7 +59,7 @@ check_adb() {
   fi
 
   local devices
-  devices=$(adb devices | grep -cv "^\(List\|$\)")
+  devices=$(adb devices | grep -Ecv "^(List|$)")
   if [[ "$devices" -eq 0 ]]; then
     echo "Error: No Android device connected."
     echo "Connect a device via USB or run: adb connect <ip>:<port>"

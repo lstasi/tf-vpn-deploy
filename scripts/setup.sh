@@ -106,7 +106,10 @@ run_terraform() {
   cd "$TF_DIR"
 
   # Pass environment variables to Terraform if set
-  [[ -n "${OPNSENSE_URI:-}" ]] && export TF_VAR_opnsense_uri="$OPNSENSE_URI"
+  # Skip URI override if bastion tunnel is active (already set by start_bastion_tunnel)
+  if [[ "$USE_BASTION" = false && -n "${OPNSENSE_URI:-}" ]]; then
+    export TF_VAR_opnsense_uri="$OPNSENSE_URI"
+  fi
   [[ -n "${OPNSENSE_API_KEY:-}" ]] && export TF_VAR_opnsense_api_key="$OPNSENSE_API_KEY"
   [[ -n "${OPNSENSE_API_SECRET:-}" ]] && export TF_VAR_opnsense_api_secret="$OPNSENSE_API_SECRET"
 
