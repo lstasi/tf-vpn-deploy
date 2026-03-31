@@ -17,6 +17,7 @@ resource "null_resource" "openvpn_instance" {
     port           = var.ovpn_port
     tunnel_network = var.ovpn_tunnel_network
     opnsense_uri   = var.opnsense_uri
+    allow_insecure = var.opnsense_allow_insecure
   }
 
   provisioner "local-exec" {
@@ -62,7 +63,7 @@ for row in data.get('rows', []):
             "description": "${var.ovpn_server_name}",
             "proto": "${var.ovpn_protocol}",
             "port": "${var.ovpn_port}",
-            "dev_type": "tun",
+            "dev_type": "${var.ovpn_mode}",
             "tunnel_network": "${var.ovpn_tunnel_network}",
             "local_group": "",
             "crypto": "",
@@ -89,8 +90,8 @@ for row in data.get('rows', []):
       set -euo pipefail
 
       INSECURE_FLAG=""
-      if [ "${self.triggers.opnsense_uri}" != "" ]; then
-        : # URI is available
+      if [ "${self.triggers.allow_insecure}" = "true" ]; then
+        INSECURE_FLAG="-k"
       fi
 
       # Find the instance UUID by description

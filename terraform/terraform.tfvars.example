@@ -34,5 +34,5 @@ wg_peers = {
 ovpn_enabled        = false
 ovpn_server_name    = "openvpn-server"
 ovpn_protocol       = "UDP"
-ovpn_port           = "1194"
+ovpn_port           = 1194
 ovpn_tunnel_network = "10.0.8.0/24"

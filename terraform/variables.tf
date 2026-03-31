@@ -113,8 +113,8 @@ variable "ovpn_protocol" {
 
 variable "ovpn_port" {
   description = "OpenVPN listen port"
-  type        = string
-  default     = "1194"
+  type        = number
+  default     = 1194
 }
 
 variable "ovpn_tunnel_network" {
