@@ -69,6 +69,12 @@ variable "wg_dns" {
   default     = ["1.1.1.1", "8.8.8.8"]
 }
 
+variable "wg_endpoint" {
+  description = "WireGuard server public endpoint (host:port) for client configs"
+  type        = string
+  default     = ""
+}
+
 variable "wg_peers" {
   description = "Map of WireGuard peer configurations"
   type = map(object({
@@ -77,4 +83,42 @@ variable "wg_peers" {
     keepalive      = optional(number, 25)
   }))
   default = {}
+}
+
+## OpenVPN
+
+variable "ovpn_enabled" {
+  description = "Enable OpenVPN server deployment"
+  type        = bool
+  default     = false
+}
+
+variable "ovpn_server_name" {
+  description = "OpenVPN server instance description"
+  type        = string
+  default     = "openvpn-server"
+}
+
+variable "ovpn_mode" {
+  description = "OpenVPN mode (tun or tap)"
+  type        = string
+  default     = "tun"
+}
+
+variable "ovpn_protocol" {
+  description = "OpenVPN protocol (UDP or TCP)"
+  type        = string
+  default     = "UDP"
+}
+
+variable "ovpn_port" {
+  description = "OpenVPN listen port"
+  type        = string
+  default     = "1194"
+}
+
+variable "ovpn_tunnel_network" {
+  description = "OpenVPN tunnel network CIDR (e.g. 10.0.8.0/24)"
+  type        = string
+  default     = "10.0.8.0/24"
 }

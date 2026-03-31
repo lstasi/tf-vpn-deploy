@@ -3,21 +3,19 @@
 # setup.sh - Main setup script for OPNsense VPN deployment.
 #
 # Establishes an SSH tunnel through a bastion host (if configured),
-# runs Terraform to deploy VPN configuration, and exports client configs.
+# then runs Terraform to deploy VPN configuration.
 #
-# Usage: ./setup.sh [--bastion] [--apply] [--destroy] [--export-configs]
+# Usage: ./setup.sh [--bastion] [--apply] [--destroy] [--plan]
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 TF_DIR="$ROOT_DIR/terraform"
-CONFIG_DIR="$ROOT_DIR/configs"
 
 # Default values
 USE_BASTION=false
 ACTION=""
-EXPORT_CONFIGS=false
 
 # SSH tunnel PID (for cleanup)
 SSH_TUNNEL_PID=""
@@ -28,9 +26,9 @@ Usage: $(basename "$0") [OPTIONS]
 
 Options:
   --bastion         Use SSH bastion host to tunnel to OPNsense
+  --plan            Run terraform plan to preview changes
   --apply           Run terraform apply to deploy VPN
   --destroy         Run terraform destroy to remove VPN
-  --export-configs  Export VPN client configuration files
   -h, --help        Show this help message
 
 Environment Variables (or set in terraform.tfvars):
@@ -42,11 +40,11 @@ Environment Variables (or set in terraform.tfvars):
   BASTION_PORT            SSH bastion port (default: 22)
 
 Examples:
+  # Preview changes
+  ./setup.sh --plan
+
   # Deploy VPN through a bastion host
   ./setup.sh --bastion --apply
-
-  # Deploy and export configs
-  ./setup.sh --apply --export-configs
 
   # Tear down VPN
   ./setup.sh --destroy
@@ -117,12 +115,19 @@ run_terraform() {
   terraform init -input=false
 
   case "$action" in
+    plan)
+      echo "Planning Terraform changes..."
+      terraform plan
+      ;;
     apply)
       echo "Planning Terraform changes..."
       terraform plan -out=tfplan
       echo "Applying Terraform changes..."
       terraform apply tfplan
       rm -f tfplan
+      echo ""
+      echo "Client configs generated in configs/ directory."
+      echo "Replace PEER_PRIVATE_KEY_HERE with each peer's actual private key."
       ;;
     destroy)
       echo "Destroying Terraform resources..."
@@ -133,18 +138,15 @@ run_terraform() {
   cd "$ROOT_DIR"
 }
 
-export_configs() {
-  echo "Exporting VPN client configurations to $CONFIG_DIR..."
-  "$SCRIPT_DIR/wireguard-manage.sh" export-configs
-  "$SCRIPT_DIR/openvpn-manage.sh" export-config
-  echo "Configuration files exported to $CONFIG_DIR/"
-}
-
 # Parse arguments
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --bastion)
       USE_BASTION=true
+      shift
+      ;;
+    --plan)
+      ACTION="plan"
       shift
       ;;
     --apply)
@@ -153,10 +155,6 @@ while [[ $# -gt 0 ]]; do
       ;;
     --destroy)
       ACTION="destroy"
-      shift
-      ;;
-    --export-configs)
-      EXPORT_CONFIGS=true
       shift
       ;;
     -h|--help)
@@ -171,8 +169,8 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ -z "$ACTION" && "$EXPORT_CONFIGS" = false ]]; then
-  echo "Error: No action specified. Use --apply, --destroy, or --export-configs."
+if [[ -z "$ACTION" ]]; then
+  echo "Error: No action specified. Use --plan, --apply, or --destroy."
   usage
   exit 1
 fi
@@ -183,13 +181,6 @@ if [[ "$USE_BASTION" = true ]]; then
 fi
 
 # Run Terraform action
-if [[ -n "$ACTION" ]]; then
-  run_terraform "$ACTION"
-fi
-
-# Export configs
-if [[ "$EXPORT_CONFIGS" = true ]]; then
-  export_configs
-fi
+run_terraform "$ACTION"
 
 echo "Done."

@@ -10,10 +10,11 @@ bastion_user = "admin"
 bastion_port = 22
 
 # WireGuard server settings
-wg_server_name   = "wg0"
-wg_listen_port   = 51820
+wg_server_name    = "wg0"
+wg_listen_port    = 51820
 wg_tunnel_address = "10.10.0.1/24"
 wg_dns            = ["1.1.1.1", "8.8.8.8"]
+wg_endpoint       = "vpn.example.com:51820"
 
 # WireGuard peers
 wg_peers = {
@@ -28,3 +29,10 @@ wg_peers = {
     keepalive      = 25
   }
 }
+
+# OpenVPN settings (optional)
+ovpn_enabled        = false
+ovpn_server_name    = "openvpn-server"
+ovpn_protocol       = "UDP"
+ovpn_port           = "1194"
+ovpn_tunnel_network = "10.0.8.0/24"

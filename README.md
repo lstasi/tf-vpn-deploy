@@ -1,23 +1,20 @@
 # tf-vpn-deploy
 
-Terraform configuration and management scripts to deploy and manage VPN services (OpenVPN and WireGuard) on OPNsense firewalls. Includes tooling for SSH bastion tunneling and deploying client configurations to Android devices.
+Terraform configuration to deploy and manage VPN services (OpenVPN and WireGuard) on OPNsense firewalls. All VPN infrastructure is managed through Terraform. Includes a helper script for SSH bastion tunneling and a utility for deploying client configurations to Android devices.
 
 ## Features
 
-- **Terraform-managed WireGuard** — Provision WireGuard servers and peers on OPNsense via the [browningluke/opnsense](https://registry.terraform.io/providers/browningluke/opnsense/latest) Terraform provider.
-- **OpenVPN management** — List, export, and control OpenVPN instances via the OPNsense API.
-- **WireGuard management** — Full lifecycle management (create, list, remove peers; generate keys; export configs) via the OPNsense API.
+- **Terraform-managed WireGuard** — Provision WireGuard servers and peers on OPNsense via the [browningluke/opnsense](https://registry.terraform.io/providers/browningluke/opnsense/latest) Terraform provider, with automatic client config file generation.
+- **Terraform-managed OpenVPN** — Deploy OpenVPN instances via the OPNsense API through Terraform `null_resource` (native provider support is [not yet available](https://github.com/browningluke/terraform-provider-opnsense#current-api-coverage)).
 - **SSH bastion support** — Tunnel through a bastion host to reach OPNsense in private networks.
 - **Android deployment** — Push `.ovpn` / `.conf` files to Android via ADB, or generate QR codes for easy scanning.
 
 ## Prerequisites
 
 - [Terraform](https://www.terraform.io/downloads) >= 1.0
-- [curl](https://curl.se/) (for API scripts)
-- [python3](https://www.python.org/) (for JSON formatting)
+- [curl](https://curl.se/) + [python3](https://www.python.org/) (required for OpenVPN API provisioners)
 - [adb](https://developer.android.com/tools/releases/platform-tools) (optional — for Android deployment)
 - [qrencode](https://fukuchi.org/works/qrencode/) (optional — for QR code generation)
-- [wg](https://www.wireguard.com/install/) (optional — for local key generation)
 - An OPNsense firewall with API access enabled
 
 ## Quick Start
@@ -34,12 +31,12 @@ cp terraform/terraform.tfvars.example terraform/terraform.tfvars
 Or set environment variables:
 
 ```bash
-export OPNSENSE_URI="https://192.168.1.1"
-export OPNSENSE_API_KEY="your-api-key"
-export OPNSENSE_API_SECRET="your-api-secret"
+export TF_VAR_opnsense_uri="https://192.168.1.1"
+export TF_VAR_opnsense_api_key="your-api-key"
+export TF_VAR_opnsense_api_secret="your-api-secret"
 ```
 
-### 2. Deploy WireGuard via Terraform
+### 2. Deploy VPN via Terraform
 
 ```bash
 # Direct connection
@@ -49,22 +46,29 @@ export OPNSENSE_API_SECRET="your-api-secret"
 export BASTION_HOST="bastion.example.com"
 export BASTION_USER="admin"
 ./scripts/setup.sh --bastion --apply
+
+# Or use Terraform directly
+cd terraform
+terraform init
+terraform plan
+terraform apply
 ```
 
-### 3. Manage VPN Services
+After `terraform apply`, WireGuard client config files are automatically generated in the `configs/` directory. Replace `PEER_PRIVATE_KEY_HERE` in each `.conf` file with the peer's actual private key.
+
+### 3. Manage VPN
+
+All VPN changes are made by editing `terraform.tfvars` (or the `.tf` files) and running:
 
 ```bash
-# WireGuard
-./scripts/wireguard-manage.sh list-servers
-./scripts/wireguard-manage.sh list-peers
-./scripts/wireguard-manage.sh gen-keys
-./scripts/wireguard-manage.sh add-peer --name phone --address 10.10.0.2/32
-./scripts/wireguard-manage.sh export-configs
+# Preview changes
+./scripts/setup.sh --plan
 
-# OpenVPN
-./scripts/openvpn-manage.sh list-servers
-./scripts/openvpn-manage.sh export-config --name my-phone
-./scripts/openvpn-manage.sh restart
+# Apply changes
+./scripts/setup.sh --apply
+
+# Tear down everything
+./scripts/setup.sh --destroy
 ```
 
 ### 4. Deploy to Android
@@ -85,17 +89,17 @@ export BASTION_USER="admin"
 
 ```
 ├── terraform/                      # Terraform configuration
-│   ├── provider.tf                 # OPNsense provider setup
+│   ├── provider.tf                 # OPNsense + hashicorp providers
 │   ├── variables.tf                # Input variables
 │   ├── wireguard.tf                # WireGuard server and peer resources
+│   ├── openvpn.tf                  # OpenVPN management via API (null_resource)
+│   ├── configs.tf                  # Client config file generation (local_file)
 │   ├── outputs.tf                  # Output values
 │   └── terraform.tfvars.example    # Example variable values
-├── scripts/                        # Management scripts
-│   ├── setup.sh                    # Main setup (bastion tunnel + terraform)
-│   ├── openvpn-manage.sh           # OpenVPN management via API
-│   ├── wireguard-manage.sh         # WireGuard management via API
+├── scripts/                        # Helper scripts
+│   ├── setup.sh                    # Bastion tunnel + terraform orchestration
 │   └── deploy-android.sh           # Push configs to Android via ADB
-├── configs/                        # Generated client configurations
+├── configs/                        # Generated client configurations (via Terraform)
 │   └── .gitkeep
 ├── .gitignore
 └── README.md

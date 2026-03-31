@@ -17,3 +17,13 @@ output "wg_peer_ids" {
   description = "Map of WireGuard peer names to their resource IDs"
   value       = { for name, peer in opnsense_wireguard_client.peers : name => peer.id }
 }
+
+output "wg_peer_config_files" {
+  description = "Paths to generated WireGuard peer configuration files"
+  value       = { for name, f in local_file.wg_peer_configs : name => f.filename }
+}
+
+output "ovpn_enabled" {
+  description = "Whether OpenVPN server was deployed"
+  value       = var.ovpn_enabled
+}

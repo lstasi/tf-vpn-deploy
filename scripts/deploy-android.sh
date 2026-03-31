@@ -171,8 +171,7 @@ list_configs() {
     echo "  (no config files found)"
     echo ""
     echo "Generate configs with:"
-    echo "  ./wireguard-manage.sh export-configs"
-    echo "  ./openvpn-manage.sh export-config --name <client>"
+    echo "  terraform -chdir=terraform apply"
   fi
 }
 
