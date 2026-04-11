@@ -1,0 +1,38 @@
+# OPNsense connection
+opnsense_uri            = "https://192.168.1.1"
+opnsense_api_key        = "your-api-key"
+opnsense_api_secret     = "your-api-secret"
+opnsense_allow_insecure = true
+
+# SSH bastion (optional, leave empty if not needed)
+bastion_host = "bastion.example.com"
+bastion_user = "admin"
+bastion_port = 22
+
+# WireGuard server settings
+wg_server_name    = "wg0"
+wg_listen_port    = 51820
+wg_tunnel_address = "10.10.0.1/24"
+wg_dns            = ["1.1.1.1", "8.8.8.8"]
+wg_endpoint       = "vpn.example.com:51820"
+
+# WireGuard peers
+wg_peers = {
+  "phone" = {
+    public_key     = "PEER_PUBLIC_KEY_HERE"
+    tunnel_address = ["10.10.0.2/32"]
+    keepalive      = 25
+  }
+  "laptop" = {
+    public_key     = "PEER_PUBLIC_KEY_HERE"
+    tunnel_address = ["10.10.0.3/32"]
+    keepalive      = 25
+  }
+}
+
+# OpenVPN settings (optional)
+ovpn_enabled        = false
+ovpn_server_name    = "openvpn-server"
+ovpn_protocol       = "UDP"
+ovpn_port           = 1194
+ovpn_tunnel_network = "10.0.8.0/24"

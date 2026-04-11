@@ -1,0 +1,24 @@
+# Terraform
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/tfplan
+terraform/terraform.tfvars
+terraform/*.auto.tfvars
+
+# Generated configs (may contain secrets)
+configs/*.ovpn
+configs/*.conf
+!configs/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
